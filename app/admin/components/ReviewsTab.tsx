@@ -12,6 +12,7 @@ export default function ReviewsTab() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   const fetchReviews = useCallback(async () => {
     const { data } = await supabase.from("reviews").select("*").order("created_at", { ascending: false });
@@ -23,6 +24,10 @@ export default function ReviewsTab() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (/[0-9]/.test(form.name)) {
+      setNameError("Name should not contain numbers");
+      return;
+    }
     setSaving(true);
     await supabase.from("reviews").insert({
       name: form.name,
@@ -34,6 +39,7 @@ export default function ReviewsTab() {
     setSaving(false);
     setShowForm(false);
     setForm(emptyForm);
+    setNameError("");
     fetchReviews();
   }
 
@@ -55,9 +61,11 @@ export default function ReviewsTab() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Patient Name <span className="text-red-400">*</span></label>
-                <input type="text" required value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                <input type="text" required value={form.name}
+                  onChange={(e) => { const v = e.target.value.replace(/[0-9]/g, ""); setForm((p) => ({ ...p, name: v })); setNameError(v !== e.target.value ? "Name should not contain numbers" : ""); }}
                   placeholder="e.g. Ravi Kumar"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className={`w-full border rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${nameError ? "border-red-400" : "border-slate-200"}`} />
+                {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Location <span className="text-red-400">*</span></label>

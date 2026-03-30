@@ -14,6 +14,8 @@ function BookForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [form, setForm] = useState({
     patient_name: "",
     phone: "",
@@ -49,6 +51,14 @@ function BookForm() {
     if (name === "test_id") {
       const test = tests.find((t) => t.id === value);
       setForm((prev) => ({ ...prev, test_id: value, test_name: test?.name || "" }));
+    } else if (name === "patient_name") {
+      const cleaned = value.replace(/[0-9]/g, "");
+      setForm((prev) => ({ ...prev, patient_name: cleaned }));
+      setNameError(cleaned !== value ? "Name should not contain numbers" : "");
+    } else if (name === "email") {
+      setForm((prev) => ({ ...prev, email: value }));
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      setEmailError(value && !valid ? "Enter a valid email address" : "");
     } else if (name === "phone") {
       const digits = value.replace(/\D/g, "").slice(0, 10);
       setForm((prev) => ({ ...prev, phone: digits }));
@@ -60,8 +70,16 @@ function BookForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (/[0-9]/.test(form.patient_name)) {
+      setNameError("Name should not contain numbers");
+      return;
+    }
     if (form.phone.length !== 10) {
       setPhoneError("Phone number must be exactly 10 digits");
+      return;
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setEmailError("Enter a valid email address");
       return;
     }
     setSubmitting(true);
@@ -162,8 +180,9 @@ function BookForm() {
                 onChange={handleChange}
                 required
                 placeholder="Enter your full name"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full border rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent ${nameError ? "border-red-400 focus:ring-red-400" : "border-slate-200 focus:ring-blue-500"}`}
               />
+              {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
             </div>
 
             {/* Phone */}
@@ -197,8 +216,9 @@ function BookForm() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full border rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent ${emailError ? "border-red-400 focus:ring-red-400" : "border-slate-200 focus:ring-blue-500"}`}
               />
+              {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
             </div>
 
             {/* Test */}
