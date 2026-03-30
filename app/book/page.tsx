@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase, type Test } from "@/lib/supabase";
 
-export default function BookPage() {
+function BookForm() {
+  const searchParams = useSearchParams();
+  const preselectedId = searchParams.get("testId") ?? "";
+
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -27,10 +31,15 @@ export default function BookPage() {
       .eq("is_active", true)
       .order("category")
       .then(({ data }) => {
-        setTests(data || []);
+        const list = (data as Test[]) || [];
+        setTests(list);
+        if (preselectedId) {
+          const match = list.find((t) => t.id === preselectedId);
+          if (match) setForm((p) => ({ ...p, test_id: match.id, test_name: match.name }));
+        }
         setLoading(false);
       });
-  }, []);
+  }, [preselectedId]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -109,7 +118,7 @@ export default function BookPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="hero-bg py-20 px-4 text-center">
+      <div className="hero-bg py-10 px-4 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Book a Test</h1>
         <p className="text-blue-200 text-lg max-w-md mx-auto">
           Fill in the form below and we will confirm your booking shortly
@@ -117,7 +126,7 @@ export default function BookPage() {
       </div>
 
       {/* Form Card */}
-      <div className="max-w-2xl mx-auto px-4 -mt-8 pb-16">
+      <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
@@ -288,5 +297,13 @@ export default function BookPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense>
+      <BookForm />
+    </Suspense>
   );
 }

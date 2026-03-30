@@ -9,10 +9,12 @@ import Testimonials from "./components/Testimonials";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import FloatingButtons from "./components/FloatingButtons";
+import ScrollReset from "./components/ScrollReset";
 
 export default function Home() {
   return (
     <>
+      <ScrollReset />
       <Navbar />
       <main>
         <Hero />

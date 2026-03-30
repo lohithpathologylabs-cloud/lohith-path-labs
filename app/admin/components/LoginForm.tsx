@@ -17,7 +17,7 @@ export default function LoginForm() {
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
-    if (err) setError("Invalid email or password. Please try again.");
+    if (err) setError(err.message);
   }
 
   return (
@@ -77,6 +77,13 @@ export default function LoginForm() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <a
+          href="/admin/forgot-password"
+          className="block text-center text-slate-400 text-sm mt-4 hover:text-blue-600 transition-colors"
+        >
+          Forgot password?
+        </a>
 
         <p className="text-center text-slate-400 text-xs mt-6">
           This panel is for lab staff only.

@@ -70,7 +70,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-5xl mx-auto mt-6 flex gap-2">
+        <div className="max-w-5xl mx-auto mt-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {([
             { key: "bookings", label: "Bookings", icon: "📋" },
             { key: "tests", label: "Tests", icon: "🧪" },
@@ -81,7 +81,7 @@ export default function AdminPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-colors ${
+              className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-colors shrink-0 ${
                 tab === t.key
                   ? "bg-white text-blue-700 shadow"
                   : "bg-white/10 hover:bg-white/20 text-white"

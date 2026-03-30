@@ -6,6 +6,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types
+export type Profile = {
+  id: string;
+  email: string;
+  role: "admin" | "staff";
+  created_at: string;
+};
+
 export type Test = {
   id: string;
   name: string;
@@ -36,5 +43,40 @@ export type Report = {
   file_path: string;
   file_url: string;
   expires_at: string;
+  created_at: string;
+};
+
+export type GalleryPhoto = {
+  id: string;
+  image_url: string;
+  file_path: string;
+  caption: string | null;
+  created_at: string;
+};
+
+export type Bio = {
+  id: number;
+  name: string;
+  title: string;
+  qualification: string;
+  experience: string;
+  specialization: string;
+  about: string;
+  photo_url: string | null;
+  photo_path: string | null;
+  show_title: boolean;
+  show_qualification: boolean;
+  show_experience: boolean;
+  show_specialization: boolean;
+  show_about: boolean;
+};
+
+export type Review = {
+  id: string;
+  name: string;
+  location: string;
+  text: string;
+  rating: number;
+  test_name: string | null;
   created_at: string;
 };
