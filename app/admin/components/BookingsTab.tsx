@@ -131,8 +131,9 @@ export default function BookingsTab() {
     const message = encodeURIComponent(
       `Hello ${booking.patient_name}, your *${booking.test_name}* report from *Lohith Path Labs* is ready!\n\n📄 Download here: ${report.file_url}\n\n⚠️ This link is valid for 3 days.\n\nFor queries call: +91 91821 47180`
     );
-    const phone = booking.phone.replace(/\D/g, "");
-    return `https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${message}`;
+    const digits = booking.phone.replace(/\D/g, "");
+    const waPhone = digits.startsWith("91") && digits.length === 12 ? digits : "91" + digits.slice(-10);
+    return `https://wa.me/${waPhone}?text=${message}`;
   }
 
   const filtered = filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
