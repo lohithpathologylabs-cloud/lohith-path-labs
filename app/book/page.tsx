@@ -13,6 +13,7 @@ function BookForm() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [form, setForm] = useState({
     patient_name: "",
     phone: "",
@@ -48,6 +49,10 @@ function BookForm() {
     if (name === "test_id") {
       const test = tests.find((t) => t.id === value);
       setForm((prev) => ({ ...prev, test_id: value, test_name: test?.name || "" }));
+    } else if (name === "phone") {
+      const digits = value.replace(/\D/g, "").slice(0, 10);
+      setForm((prev) => ({ ...prev, phone: digits }));
+      setPhoneError(digits.length > 0 && digits.length < 10 ? "Phone number must be 10 digits" : "");
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -55,6 +60,10 @@ function BookForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (form.phone.length !== 10) {
+      setPhoneError("Phone number must be exactly 10 digits");
+      return;
+    }
     setSubmitting(true);
     setError("");
 
@@ -168,9 +177,12 @@ function BookForm() {
                 value={form.phone}
                 onChange={handleChange}
                 required
-                placeholder="+91 XXXXX XXXXX"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="10-digit mobile number"
+                maxLength={10}
+                inputMode="numeric"
+                className={`w-full border rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent ${phoneError ? "border-red-400 focus:ring-red-400" : "border-slate-200 focus:ring-blue-500"}`}
               />
+              {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
             </div>
 
             {/* Email */}
