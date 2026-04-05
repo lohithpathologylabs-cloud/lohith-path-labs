@@ -38,7 +38,7 @@ export default function ReportsPage() {
     setLoading(false);
 
     if (dbError) {
-      setError(`Error: ${dbError.message}`);
+      setError("Something went wrong. Please try again.");
       return;
     }
     if (!data || data.length === 0) {
@@ -77,7 +77,7 @@ export default function ReportsPage() {
 
     if (bookingsError) {
       setLoading(false);
-      setError(`Error: ${bookingsError.message}`);
+      setError("Something went wrong. Please try again.");
       return;
     }
     if (!bookingsData || bookingsData.length === 0) {
