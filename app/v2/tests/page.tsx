@@ -348,8 +348,8 @@ function TestsInner() {
     <div className="min-h-screen bg-slate-50">
       <V2Navbar />
 
-      {/* Sticky search + categories */}
-      <div className="sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-slate-100 shadow-sm">
+      {/* Fixed search + categories */}
+      <div className="fixed top-16 left-0 right-0 z-30 bg-white/95 backdrop-blur border-b border-slate-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 space-y-2">
           {/* Search */}
           <div className="relative">
@@ -380,7 +380,7 @@ function TestsInner() {
       </div>
 
       {/* Page content: tests grid + cart sidebar */}
-      <div className="max-w-6xl mx-auto px-4 pt-8 pb-32 md:pb-16">
+      <div className="max-w-6xl mx-auto px-4 pt-[168px] pb-32 md:pb-16">
         <div className="md:grid md:grid-cols-[1fr_340px] md:gap-6 md:items-start">
 
           {/* ── Tests grid ── */}
