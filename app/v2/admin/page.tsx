@@ -9,8 +9,9 @@ import TestsTab from "@/app/admin/components/TestsTab";
 import GalleryTab from "@/app/admin/components/GalleryTab";
 import ReviewsTab from "@/app/admin/components/ReviewsTab";
 import BioTab from "@/app/admin/components/BioTab";
+import UsersTab from "@/app/admin/components/UsersTab";
 
-type Tab = "bookings" | "tests" | "gallery" | "reviews" | "profile";
+type Tab = "bookings" | "tests" | "gallery" | "reviews" | "profile" | "users";
 
 export default function V2AdminPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -73,6 +74,7 @@ export default function V2AdminPage() {
             { key: "gallery",  label: "Gallery",  icon: "🖼️" },
             { key: "reviews",  label: "Reviews",  icon: "⭐" },
             { key: "profile",  label: "Profile",  icon: "👤" },
+            { key: "users",    label: "Users",    icon: "🔐" },
           ] as { key: Tab; label: string; icon: string }[]).map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-colors shrink-0 ${
@@ -90,6 +92,7 @@ export default function V2AdminPage() {
         {tab === "gallery"  && <GalleryTab />}
         {tab === "reviews"  && <ReviewsTab />}
         {tab === "profile"  && <BioTab />}
+        {tab === "users"    && <UsersTab />}
       </div>
     </div>
   );
