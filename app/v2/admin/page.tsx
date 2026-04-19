@@ -34,23 +34,35 @@ export default function V2AdminPage() {
   const [tab, setTab] = useState<Tab>("bookings");
 
   useEffect(() => {
+    async function fetchRole(userId: string) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+      setRole((profile?.role as Role) ?? "staff");
+    }
+
+    // Resolve immediately from local session — no waiting for network event
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      if (sessionUser) await fetchRole(sessionUser.id);
+      setChecking(false);
+    });
+
+    // Keep listening for login / logout changes
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
-
       if (sessionUser) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", sessionUser.id)
-          .single();
-        setRole((profile?.role as Role) ?? "staff");
+        await fetchRole(sessionUser.id);
       } else {
         setRole(null);
       }
-
       setChecking(false);
     });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
