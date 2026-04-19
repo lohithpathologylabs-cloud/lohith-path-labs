@@ -53,7 +53,17 @@ export default function UsersTab() {
   }
 
   async function handleRoleChange(userId: string, newRole: string) {
-    await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
+    const token = await getToken();
+    const res = await fetch("/api/admin/update-role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ userId, newRole }),
+    });
+    if (!res.ok) {
+      const json = await res.json();
+      alert(json.error || "Failed to update role.");
+      return;
+    }
     fetchUsers();
   }
 

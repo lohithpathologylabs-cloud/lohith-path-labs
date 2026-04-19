@@ -266,7 +266,7 @@ export default function ReportsPage() {
               {bookings.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
                   <p>No bookings found.</p>
-                  <a href="/v2/tests" className="mt-2 inline-block text-blue-600 text-sm hover:underline">Book a test →</a>
+                  <a href="/tests" className="mt-2 inline-block text-blue-600 text-sm hover:underline">Book a test →</a>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -341,7 +341,7 @@ export default function ReportsPage() {
               )}
 
               <div className="mt-6 text-center">
-                <a href="/v2/tests" className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium hover:underline">
+                <a href="/tests" className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium hover:underline">
                   + Book More Tests
                 </a>
               </div>

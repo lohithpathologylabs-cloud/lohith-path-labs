@@ -12,15 +12,43 @@ import BioTab from "@/app/admin/components/BioTab";
 import UsersTab from "@/app/admin/components/UsersTab";
 
 type Tab = "bookings" | "tests" | "gallery" | "reviews" | "profile" | "users";
+type Role = "admin" | "staff";
+
+const ADMIN_TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: "bookings", label: "Bookings", icon: "📋" },
+  { key: "tests",    label: "Tests",    icon: "🧪" },
+  { key: "gallery",  label: "Gallery",  icon: "🖼️" },
+  { key: "reviews",  label: "Reviews",  icon: "⭐" },
+  { key: "profile",  label: "Profile",  icon: "👤" },
+  { key: "users",    label: "Users",    icon: "🔐" },
+];
+
+const STAFF_TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: "bookings", label: "Bookings", icon: "📋" },
+];
 
 export default function V2AdminPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<Role | null>(null);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("bookings");
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+
+      if (sessionUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", sessionUser.id)
+          .single();
+        setRole((profile?.role as Role) ?? "staff");
+      } else {
+        setRole(null);
+      }
+
       setChecking(false);
     });
     return () => listener.subscription.unsubscribe();
@@ -40,6 +68,8 @@ export default function V2AdminPage() {
 
   if (!user) return <LoginForm />;
 
+  const tabs = role === "admin" ? ADMIN_TABS : STAFF_TABS;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="hero-bg px-4 pt-6 pb-8">
@@ -52,11 +82,20 @@ export default function V2AdminPage() {
             </div>
             <div>
               <div className="text-white font-bold text-sm">Lohith Path Labs</div>
-              <div className="text-blue-300 text-xs">Admin Panel V2</div>
+              <div className="text-blue-300 text-xs">Admin Panel</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-blue-200 text-sm hidden sm:block">{user.email}</span>
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-blue-200 text-sm">{user.email}</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ${
+                role === "admin"
+                  ? "bg-yellow-400/20 text-yellow-300"
+                  : "bg-white/10 text-blue-200"
+              }`}>
+                {role === "admin" ? "Admin" : "Staff"}
+              </span>
+            </div>
             <button onClick={handleLogout}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-3 py-1.5 rounded-full transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,32 +106,27 @@ export default function V2AdminPage() {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto mt-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {([
-            { key: "bookings", label: "Bookings", icon: "📋" },
-            { key: "tests",    label: "Tests",    icon: "🧪" },
-            { key: "gallery",  label: "Gallery",  icon: "🖼️" },
-            { key: "reviews",  label: "Reviews",  icon: "⭐" },
-            { key: "profile",  label: "Profile",  icon: "👤" },
-            { key: "users",    label: "Users",    icon: "🔐" },
-          ] as { key: Tab; label: string; icon: string }[]).map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-colors shrink-0 ${
-                tab === t.key ? "bg-white text-blue-700 shadow" : "bg-white/10 hover:bg-white/20 text-white"
-              }`}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
+        {tabs.length > 1 && (
+          <div className="max-w-5xl mx-auto mt-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {tabs.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-colors shrink-0 ${
+                  tab === t.key ? "bg-white text-blue-700 shadow" : "bg-white/10 hover:bg-white/20 text-white"
+                }`}>
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-6 pb-16">
         {tab === "bookings" && <V2BookingsTab />}
-        {tab === "tests"    && <TestsTab />}
-        {tab === "gallery"  && <GalleryTab />}
-        {tab === "reviews"  && <ReviewsTab />}
-        {tab === "profile"  && <BioTab />}
-        {tab === "users"    && <UsersTab />}
+        {tab === "tests"    && role === "admin" && <TestsTab />}
+        {tab === "gallery"  && role === "admin" && <GalleryTab />}
+        {tab === "reviews"  && role === "admin" && <ReviewsTab />}
+        {tab === "profile"  && role === "admin" && <BioTab />}
+        {tab === "users"    && role === "admin" && <UsersTab />}
       </div>
     </div>
   );
