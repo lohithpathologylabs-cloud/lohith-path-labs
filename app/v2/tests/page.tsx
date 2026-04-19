@@ -150,19 +150,113 @@ function TestsInner() {
     return Object.keys(e).length === 0;
   }
 
+  function buildReceiptHTML(d: {
+    ref: string; patientName: string; phone: string;
+    cartItems: { name: string; price: number | null }[];
+    total: number; date: string; slot: string;
+    collectionType: "walkin" | "home"; address?: string | null;
+    paymentMethod: "cash" | "upi"; bookedOn: string;
+  }): string {
+    const rows = d.cartItems.map(i =>
+      `<tr><td style="padding:5px 0;color:#334155">${i.name}</td><td style="padding:5px 0;text-align:right;font-weight:600;color:#1e293b">${i.price ? "₹" + i.price : "—"}</td></tr>`
+    ).join("");
+    return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Booking Receipt ${d.ref} — Lohith Path Labs</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;background:#f1f5f9;display:flex;justify-content:center;padding:30px 16px}
+  .card{background:#fff;border-radius:16px;overflow:hidden;max-width:480px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+  .header{background:linear-gradient(135deg,#1d4ed8,#0891b2);color:#fff;padding:22px 24px}
+  .lab{font-size:19px;font-weight:700}
+  .lab-sub{color:#bfdbfe;font-size:11px;margin-top:2px}
+  .receipt-label{font-size:11px;color:#bfdbfe;margin-top:6px;letter-spacing:.05em;text-transform:uppercase}
+  .id-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+  .booking-id{font-size:26px;font-weight:700;color:#2563eb;font-family:monospace;letter-spacing:.05em}
+  .date-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+  .date-val{font-size:13px;font-weight:600;color:#334155;margin-top:2px}
+  .section{padding:16px 24px;border-bottom:1px dashed #e2e8f0}
+  .sec-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .field-label{font-size:11px;color:#94a3b8}
+  .field-val{font-size:13px;font-weight:600;color:#1e293b;margin-top:2px}
+  table{width:100%;border-collapse:collapse}
+  .total-row td{padding-top:10px;font-weight:700;font-size:15px;border-top:1px solid #e2e8f0}
+  .total-row td:last-child{color:#2563eb;font-size:18px;text-align:right}
+  .badge{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;border-radius:20px;font-size:11px;margin-bottom:8px}
+  .footer{text-align:center;padding:14px;color:#94a3b8;font-size:11px;background:#f8fafc}
+  @media print{body{background:#fff;padding:0}.card{box-shadow:none;border-radius:0;max-width:100%}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="card">
+  <div class="header">
+    <div class="lab">🔬 Lohith Path Labs</div>
+    <div class="lab-sub">Advanced Quality Testing</div>
+    <div class="receipt-label">Booking Receipt</div>
+  </div>
+  <div class="id-bar">
+    <div>
+      <div class="date-label">Booking ID</div>
+      <div class="booking-id">${d.ref}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="date-label">Booked On</div>
+      <div class="date-val">${d.bookedOn}</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Patient Details</div>
+    <div class="grid2">
+      <div><div class="field-label">Name</div><div class="field-val">${d.patientName}</div></div>
+      <div><div class="field-label">Mobile</div><div class="field-val">+91 ${d.phone}</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Tests Booked</div>
+    <table>${rows}
+      <tr class="total-row"><td>Total Amount</td><td>₹${d.total}</td></tr>
+    </table>
+  </div>
+  <div class="section">
+    <div class="sec-title">Appointment Details</div>
+    <div class="grid2">
+      <div><div class="field-label">Date</div><div class="field-val">${d.date}</div></div>
+      <div><div class="field-label">Time Slot</div><div class="field-val">${d.slot}</div></div>
+      <div><div class="field-label">Collection</div><div class="field-val">${d.collectionType === "home" ? "Home Collection" : "Walk-in at Lab"}</div></div>
+      <div><div class="field-label">Payment</div><div class="field-val">${d.paymentMethod === "cash" ? "Cash on Collection" : "UPI / Online"}</div></div>
+    </div>
+    ${d.address ? `<div style="margin-top:10px"><div class="field-label">Collection Address</div><div class="field-val" style="font-size:12px;line-height:1.5">${d.address}</div></div>` : ""}
+  </div>
+  <div class="section" style="border-bottom:none">
+    <div class="badge">⏳ Pending Confirmation</div>
+    <p style="font-size:12px;color:#64748b">Our team will confirm your appointment within 30 minutes. Save your Booking ID <strong>${d.ref}</strong> to track your reports.</p>
+  </div>
+  <div class="footer">Thank you for choosing Lohith Path Labs · lohithpathlabs.in · +91 91821 47180</div>
+</div>
+</body></html>`;
+  }
+
   async function handleBooking() {
     if (!validate()) return;
     if (items.length === 0) return;
     setSubmitting(true);
 
+    // Open receipt window NOW (synchronous = not blocked by popup blocker)
+    const receiptWin = window.open("", "_blank");
+    if (receiptWin) {
+      receiptWin.document.write(`<html><body style="font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b">
+        <p>⏳ Generating your receipt...</p></body></html>`);
+    }
+
     const ref = "LP" + Math.floor(1000 + Math.random() * 9000);
     const cartItems = items.map(i => ({ id: i.test.id, name: i.test.name, price: i.test.price, category: i.test.category }));
     const testNames = items.map(i => i.test.name).join(", ");
     const formattedAddress = form.collection_type === "home" ? buildAddress() : null;
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    const formattedDate = new Date(form.preferred_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const bookedOn = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
     const { error } = await supabase.from("bookings").insert({
       patient_name:    form.patient_name,
-      phone:           form.phone.replace(/\D/g, ""),
+      phone:           cleanPhone,
       email:           null,
       test_id:         items.length === 1 ? items[0].test.id : null,
       test_name:       testNames,
@@ -178,13 +272,30 @@ function TestsInner() {
 
     if (error) {
       setSubmitting(false);
+      receiptWin?.close();
       alert("Something went wrong. Please try again or call us.");
       return;
     }
 
-    // Open WhatsApp with pre-filled booking message (patient sends to lab)
-    const cleanPhone = form.phone.replace(/\D/g, "");
-    const formattedDate = new Date(form.preferred_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    // Fill receipt window and auto-trigger print/save dialog
+    if (receiptWin) {
+      const html = buildReceiptHTML({
+        ref, patientName: form.patient_name, phone: cleanPhone,
+        cartItems: items.map(i => ({ name: i.test.name, price: i.test.price })),
+        total, date: formattedDate, slot: form.time_slot,
+        collectionType: form.collection_type,
+        address: formattedAddress,
+        paymentMethod: form.payment_method,
+        bookedOn,
+      });
+      receiptWin.document.open();
+      receiptWin.document.write(html);
+      receiptWin.document.close();
+      // Small delay so the page renders before print dialog opens
+      setTimeout(() => { receiptWin.print(); }, 600);
+    }
+
+    // Open WhatsApp with pre-filled message
     const waLines = [
       `Hello Lohith Path Labs! 👋`,
       ``,
