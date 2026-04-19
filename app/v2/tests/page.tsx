@@ -239,13 +239,7 @@ function TestsInner() {
     if (items.length === 0) return;
     setSubmitting(true);
 
-    // Open receipt window NOW (synchronous = not blocked by popup blocker)
-    const receiptWin = window.open("", "_blank");
-    if (receiptWin) {
-      receiptWin.document.write(`<html><body style="font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b">
-        <p>⏳ Generating your receipt...</p></body></html>`);
-    }
-
+    // Build all data BEFORE any await so we can open both windows synchronously
     const ref = "LP" + Math.floor(1000 + Math.random() * 9000);
     const cartItems = items.map(i => ({ id: i.test.id, name: i.test.name, price: i.test.price, category: i.test.category }));
     const testNames = items.map(i => i.test.name).join(", ");
@@ -254,48 +248,6 @@ function TestsInner() {
     const formattedDate = new Date(form.preferred_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
     const bookedOn = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
-    const { error } = await supabase.from("bookings").insert({
-      patient_name:    form.patient_name,
-      phone:           cleanPhone,
-      email:           null,
-      test_id:         items.length === 1 ? items[0].test.id : null,
-      test_name:       testNames,
-      collection_type: form.collection_type,
-      preferred_date:  form.preferred_date || null,
-      notes:           null,
-      address:         formattedAddress,
-      time_slot:       form.time_slot,
-      payment_method:  form.payment_method,
-      booking_ref:     ref,
-      cart_items:      cartItems,
-    });
-
-    if (error) {
-      setSubmitting(false);
-      receiptWin?.close();
-      alert("Something went wrong. Please try again or call us.");
-      return;
-    }
-
-    // Fill receipt window and auto-trigger print/save dialog
-    if (receiptWin) {
-      const html = buildReceiptHTML({
-        ref, patientName: form.patient_name, phone: cleanPhone,
-        cartItems: items.map(i => ({ name: i.test.name, price: i.test.price })),
-        total, date: formattedDate, slot: form.time_slot,
-        collectionType: form.collection_type,
-        address: formattedAddress,
-        paymentMethod: form.payment_method,
-        bookedOn,
-      });
-      receiptWin.document.open();
-      receiptWin.document.write(html);
-      receiptWin.document.close();
-      // Small delay so the page renders before print dialog opens
-      setTimeout(() => { receiptWin.print(); }, 600);
-    }
-
-    // Open WhatsApp with pre-filled message
     const waLines = [
       `Hello Lohith Path Labs! 👋`,
       ``,
@@ -316,7 +268,54 @@ function TestsInner() {
       `Please confirm my appointment. Thank you!`,
     ].filter(Boolean).join("\n");
 
-    window.open(`https://wa.me/${LAB_WHATSAPP_NO}?text=${encodeURIComponent(waLines)}`, "_blank");
+    // Open BOTH windows synchronously before any await — browsers only allow
+    // window.open inside a direct user-gesture call stack, not after async gaps
+    const receiptWin = window.open("", "_blank");
+    if (receiptWin) {
+      receiptWin.document.write(`<html><body style="font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b"><p>⏳ Generating your receipt...</p></body></html>`);
+    }
+    const waWin = window.open(`https://wa.me/${LAB_WHATSAPP_NO}?text=${encodeURIComponent(waLines)}`, "_blank");
+
+    const { error } = await supabase.from("bookings").insert({
+      patient_name:    form.patient_name,
+      phone:           cleanPhone,
+      email:           null,
+      test_id:         items.length === 1 ? items[0].test.id : null,
+      test_name:       testNames,
+      collection_type: form.collection_type,
+      preferred_date:  form.preferred_date || null,
+      notes:           null,
+      address:         formattedAddress,
+      time_slot:       form.time_slot,
+      payment_method:  form.payment_method,
+      booking_ref:     ref,
+      cart_items:      cartItems,
+    });
+
+    if (error) {
+      setSubmitting(false);
+      receiptWin?.close();
+      waWin?.close();
+      alert("Something went wrong. Please try again or call us.");
+      return;
+    }
+
+    // Fill receipt and trigger print dialog
+    if (receiptWin) {
+      const html = buildReceiptHTML({
+        ref, patientName: form.patient_name, phone: cleanPhone,
+        cartItems: items.map(i => ({ name: i.test.name, price: i.test.price })),
+        total, date: formattedDate, slot: form.time_slot,
+        collectionType: form.collection_type,
+        address: formattedAddress,
+        paymentMethod: form.payment_method,
+        bookedOn,
+      });
+      receiptWin.document.open();
+      receiptWin.document.write(html);
+      receiptWin.document.close();
+      setTimeout(() => { receiptWin.print(); }, 600);
+    }
 
     setConfirmed({
       ref,
