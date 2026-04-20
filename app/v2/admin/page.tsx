@@ -43,24 +43,25 @@ export default function V2AdminPage() {
       setRole((profile?.role as Role) ?? "staff");
     }
 
-    // Resolve immediately from local session — no waiting for network event
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Resolve immediately from local session — stop loading as soon as we know
+    // whether there's a user; fetch role in the background (no loading delay)
+    supabase.auth.getSession().then(({ data: { session } }) => {
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
-      if (sessionUser) await fetchRole(sessionUser.id);
-      setChecking(false);
+      setChecking(false);                          // unblock UI immediately
+      if (sessionUser) fetchRole(sessionUser.id);  // role loads in background
     });
 
     // Keep listening for login / logout changes
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
+      setChecking(false);
       if (sessionUser) {
-        await fetchRole(sessionUser.id);
+        fetchRole(sessionUser.id);
       } else {
         setRole(null);
       }
-      setChecking(false);
     });
 
     return () => listener.subscription.unsubscribe();
